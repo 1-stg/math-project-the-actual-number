@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Тест Миллера-Рабина — проверка простоты больших чисел</title>
+  <meta name="description" content="Бесплатный онлайн-инструмент для проверки простоты очень больших чисел (до 500+ цифр) с помощью теста Миллера-Рабина. Высокая точность, адаптивный интерфейс, образовательные пояснения." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔬</text></svg>">
+  <style>
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8fafc;
+      --bg-card: #ffffff;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --border: #e2e8f0;
+      --accent: #8b5cf6;
+      --accent-light: #ede9fe;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-card: #1e293b;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --border: #334155;
+        --accent: #a78bfa;
+        --accent-light: #334155;
+        --success: #34d399;
+        --warning: #fbbf24;
+        --danger: #f87171;
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 1.875rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.125rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .info {
+      background-color: rgba(139, 92, 246, 0.2);
+      padding: 1.25rem;
+      border-radius: 0 8px 8px 0;
+      color: white;
+      font-size: 18px;
+      border-radius: 20px;
+    }
+
+    .input-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.875rem 1rem 0.875rem 2.5rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 1rem;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      transition: var(--transition);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.5rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 100%;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn:hover {
+      background: #7c3aed;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-success { background: var(--success); }
+    .btn-success:hover { background: #059669; }
+    .btn-danger { background: var(--danger); }
+    .btn-danger:hover { background: #dc2626; }
+
+    .result {
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-top: 1rem;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-prime {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--success);
+    }
+
+    .result-composite {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--danger);
+    }
+
+    .result-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .stat-item {
+      background: rgba(0,0,0,0.03);
+      border-radius: 8px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-weight: 700;
+      font-size: 1.125rem;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(139, 92, 246, 0.2);
+      border-top: 3px solid var(--accent);
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .progress-container {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      margin: 1rem auto;
+      max-width: 300px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .explanation {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .explanation h3 {
+      margin-bottom: 0.75rem;
+      color: var(--text-primary);
+    }
+
+    .steps {
+      counter-reset: step-counter;
+    }
+
+    .step {
+      position: relative;
+      padding-left: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .step::before {
+      counter-increment: step-counter;
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 24px;
+      height: 24px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-top: 0.5rem;
+    }
+
+    .examples {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .example-btn {
+      padding: 0.5rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: var(--transition);
+      color: white;
+    }
+
+    .example-btn:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 1rem; }
+      h1 { font-size: 1.5rem; }
+      .btn { padding: 0.75rem; }
+      .result-stats { grid-template-columns: 1fr; }
+    }
+
+    /* Анимация появления */
+    .animate-appear { opacity: 0; }
+    .animate-appear.active { opacity: 1; transition: opacity 0.5s ease; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔬 Тест Миллера-Рабина</h1>
+      <p class="subtitle">Проверка простоты очень больших чисел (до 500+ цифр) с высокой точностью</p>
+    </header>
+
+    <main>
+      <div class="card info">
+        <p>Алгоритм выполняет <strong>k раундов</strong> теста. При k=20 вероятность ошибки < <strong>10⁻¹²</strong>.</p>
+        <p style="margin-top: 0.5rem;">Для чисел до 10⁵⁰ используется k=10, от 10⁵⁰ до 10¹⁰⁰ — k=15, свыше — k=20.</p>
+      </div>
+
+      <div class="card">
+        <div class="input-group">
+          <label for="numberInput">Введите целое число (без пробелов и разделителей)</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔢</span>
+            <input 
+              type="text" 
+              id="numberInput" 
+              placeholder="Например: 982451653 или 123456789012345678901234567890..."
+              autocomplete="off"
+              spellcheck="false"
+            >
+          </div>
+          
+          <div class="examples">
+            <button class="example-btn" data-value="982451653">982451653 (простое)</button>
+            <button class="example-btn" data-value="12345678901234567890">12345678901234567890</button>
+            <button class="example-btn" data-value="170141183460469231731687303715884105727">Mersenne 127</button>
+          </div>
+        </div>
+
+        <button id="checkButton" class="btn">
+          <span>🔍 Проверить число</span>
+        </button>
+
+        <div id="loading" class="loading" style="display: none;">
+          <div class="spinner"></div>
+          <p>Выполняется тест Миллера-Рабина...</p>
+          <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+          <p id="progressText">Подготовка данных...</p>
+        </div>
+
+        <div id="result" class="result animate-appear" style="display: none;"></div>
+      </div>
+
+      <div class="card explanation">
+        <h3>Как работает тест Миллера-Рабина?</h3>
+        <div class="steps">
+          <div class="step">
+            Представляем <em>n−1</em> как <strong>2ʳ × d</strong>, где <em>d</em> — нечётное.
+          </div>
+          <div class="step">
+            Выбираем случайное <em>a</em> из [2, n−2].
+          </div>
+          <div class="step">
+            Вычисляем <em>x = aᵈ mod n</em>. Если <em>x = 1</em> или <em>x = n−1</em> — <em>n</em> может быть простым.
+          </div>
+          <div class="step">
+            Иначе возводим <em>x</em> в квадрат <em>r−1</em> раз. Если в какой-то момент получим <em>n−1</em> — возможно простое.
+          </div>
+          <div class="step">
+            Если ни один раунд не дал "возможно простое" — число точно составное.
+          </div>
+        </div>
+        <p style="margin-top: 1rem;">
+          <strong>Важно:</strong> Тест вероятностный. Вероятность ошибки ≈ 4⁻ᵏ. При k=20 — менее чем 1 на квадриллион.
+        </p>
+      </div>
+    </main>
+
+    <footer>
+      <p>Алгоритм предложен Гари Миллером (1976) и Майклом Рабином (1980).</p>
+      <p>Инструмент работает локально — ваши данные не отправляются на сервер.</p>
+    </footer>
+  </div>
+
+  <script>
+    // === Web Worker для тяжелых вычислений ===
+    const workerCode = `
+      function modPow(base, exp, mod) {
+        base = base % mod;
+        let result = 1n;
+        while (exp > 0n) {
+          if (exp & 1n) result = (result * base) % mod;
+          base = (base * base) % mod;
+          exp >>= 1n;
+        }
+        return result;
+      }
+
+      function millerRabin(n, k) {
+        if (n === 2n || n === 3n) return true;
+        if (n < 2n || n % 2n === 0n) return false;
+
+        // Находим r и d: n-1 = 2^r * d
+        let d = n - 1n;
+        let r = 0n;
+        while (d % 2n === 0n) {
+          d /= 2n;
+          r++;
+        }
+
+        // Генерируем криптографически безопасные случайные числа
+        function getRandomBase(max) {
+          const bytes = new Uint8Array(8);
+          crypto.getRandomValues(bytes);
+          let value = 0n;
+          for (let i = 0; i < 8; i++) {
+            value = (value << 8n) | BigInt(bytes[i]);
+          }
+          return 2n + (value % (max - 3n));
+        }
+
+        for (let i = 0; i < k; i++) {
+          const a = getRandomBase(n);
+          let x = modPow(a, d, n);
+          
+          if (x === 1n || x === n - 1n) continue;
+
+          let composite = true;
+          for (let j = 0n; j < r - 1n; j++) {
+            x = modPow(x, 2n, n);
+            if (x === n - 1n) {
+              composite = false;
+              break;
+            }
+          }
+          
+          if (composite) return false;
+        }
+        return true;
+      }
+
+      self.onmessage = function(e) {
+        const { n, k } = e.data;
+        const isPrime = millerRabin(BigInt(n), k);
+        self.postMessage({ isPrime, k });
+      };
+    `;
+
+    let worker;
+    try {
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      worker = new Worker(URL.createObjectURL(blob));
+    } catch (e) {
+      console.warn('Web Worker не поддерживается. Используем fallback.');
+    }
+
+    // === Вспомогательные функции ===
+    function formatNumber(numStr) {
+      if (numStr.length <= 30) return numStr;
+      return numStr.substring(0, 20) + '...' + numStr.substring(numStr.length - 5);
+    }
+
+    function getTestRounds(numDigits) {
+      if (numDigits <= 50) return 10;
+      if (numDigits <= 100) return 15;
+      return 20;
+    }
+
+    function showResult(isPrime, nStr, k, duration) {
+      const resultDiv = document.getElementById('result');
+      const numDigits = nStr.length;
+      const numDisplay = formatNumber(nStr);
+      
+      let html = `
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <span style="font-size: 1.5rem;">${isPrime ? '✅' : '❌'}</span>
+          <h3 style="margin: 0; font-weight: 700;">${isPrime ? 'Вероятно простое' : 'Составное'}</h3>
+        </div>
+        <p><strong>Число:</strong> <code>${numDisplay}</code> (${numDigits} цифр)</p>
+        <p><strong>Раундов:</strong> ${k} &nbsp; | &nbsp; <strong>Время:</strong> ${duration} мс</p>
+      `;
+
+      if (isPrime) {
+        const errorProb = (4 ** -k).toExponential(2);
+        html += `<p style="margin-top: 0.5rem; font-size: 0.95rem; color: var(--success);">
+          📌 Вероятность ошибки: <code>${errorProb}</code> (менее 1 на ${Math.pow(4, k).toExponential(0)})
+        </p>`;
+      }
+
+      html += `
+        <div class="result-stats">
+          <div class="stat-item">
+            <span class="stat-value">${numDigits}</span>
+            <span>Цифр</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">${k}</span>
+            <span>Раундов</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">${duration} мс</span>
+            <span>Время</span>
+          </div>
+        </div>
+        
+        <button class="copy-btn" id="copyResult">
+          <span>📋</span> Скопировать результат
+        </button>
+      `;
+
+      resultDiv.innerHTML = html;
+      resultDiv.className = 'result animate-appear ' + (isPrime ? 'result-prime' : 'result-composite');
+      resultDiv.style.display = 'block';
+      resultDiv.classList.add('active');
+
+      // Обработчик копирования
+      document.getElementById('copyResult').onclick = () => {
+        const text = isPrime 
+          ? `Число ${nStr} — вероятно простое (тест Миллера-Рабина, k=${k})`
+          : `Число ${nStr} — составное (точно)`;
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = document.getElementById('copyResult');
+          const original = btn.innerHTML;
+          btn.innerHTML = '<span>✅</span> Скопировано!';
+          setTimeout(() => btn.innerHTML = original, 2000);
+        });
+      };
+    }
+
+    function showError(message) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = `<div style="color: var(--danger);">${message}</div>`;
+      resultDiv.className = 'result result-composite';
+      resultDiv.style.display = 'block';
+      resultDiv.classList.add('active');
+    }
+
+    function updateProgress(step, total, message) {
+      const bar = document.getElementById('progressBar');
+      const text = document.getElementById('progressText');
+      if (bar && text) {
+        bar.style.width = `${(step / total) * 100}%`;
+        text.textContent = message;
+      }
+    }
+
+    // === Обработчики UI ===
+    document.querySelectorAll('.example-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('numberInput').value = btn.dataset.value;
+      });
+    });
+
+    document.getElementById('checkButton').addEventListener('click', async () => {
+      const input = document.getElementById('numberInput');
+      const numStr = input.value.trim();
+      const loading = document.getElementById('loading');
+      const resultDiv = document.getElementById('result');
+
+      // Сброс
+      resultDiv.style.display = 'none';
+      loading.style.display = 'block';
+      updateProgress(0, 100, 'Анализ входных данных...');
+
+      // Валидация
+      if (!numStr) {
+        loading.style.display = 'none';
+        showError('Пожалуйста, введите число.');
+        return;
+      }
+
+      if (!/^\d+$/.test(numStr)) {
+        loading.style.display = 'none';
+        showError('Число должно содержать только цифры (0–9).');
+        return;
+      }
+
+      if (numStr.length === 1 && numStr <= '1') {
+        loading.style.display = 'none';
+        showError('Число должно быть больше 1.');
+        return;
+      }
+
+      if (numStr.length > 500) {
+        loading.style.display = 'none';
+        showError('Максимальная поддерживаемая длина: 500 цифр.');
+        return;
+      }
+
+      // Убираем ведущие нули
+      const cleanNum = numStr.replace(/^0+/, '') || '0';
+      if (cleanNum === '0' || cleanNum === '1') {
+        loading.style.display = 'none';
+        showError('Число должно быть больше 1.');
+        return;
+      }
+
+      // Определяем число раундов
+      const k = getTestRounds(cleanNum.length);
+      updateProgress(20, 100, `Подготовка ${k} раундов теста...`);
+
+      // Запуск теста
+      const startTime = performance.now();
+
+      try {
+        if (worker) {
+          // Используем Web Worker
+          updateProgress(40, 100, 'Запуск вычислений в фоновом потоке...');
+          worker.postMessage({ n: cleanNum, k });
+          
+          const result = await new Promise((resolve) => {
+            const handler = (e) => {
+              worker.removeEventListener('message', handler);
+              resolve(e.data);
+            };
+            worker.addEventListener('message', handler);
+          });
+
+          const duration = Math.round(performance.now() - startTime);
+          loading.style.display = 'none';
+          showResult(result.isPrime, cleanNum, result.k, duration);
+        } else {
+          // Fallback — синхронно (только для небольших чисел)
+          updateProgress(50, 100, 'Выполнение вычислений...');
+          
+          // Для безопасности — не даём браузеру зависнуть
+          await new Promise(resolve => setTimeout(resolve, 10));
+          
+          // Имитация modPow для fallback (упрощённая)
+          function modPowFallback(a, b, n) {
+            a = a % n;
+            let res = 1n;
+            let x = BigInt(a);
+            let exp = BigInt(b);
+            while (exp > 0n) {
+              if (exp & 1n) res = (res * x) % n;
+              x = (x * x) % n;
+              exp >>= 1n;
+            }
+            return res;
+          }
+
+          function millerRabinFallback(n, k) {
+            if (n === 2n || n === 3n) return true;
+            if (n < 2n || n % 2n === 0n) return false;
+
+            let d = n - 1n;
+            let r = 0;
+            while (d % 2n === 0n) {
+              d /= 2n;
+              r++;
+            }
+
+            for (let i = 0; i < k; i++) {
+              const a = 2n + BigInt(Math.floor(Math.random() * (Number(n) - 3)));
+              let x = modPowFallback(a, d, n);
+              
+              if (x === 1n || x === n - 1n) continue;
+
+              let maybePrime = false;
+              for (let j = 0; j < r - 1; j++) {
+                x = modPowFallback(x, 2n, n);
+                if (x === n - 1n) {
+                  maybePrime = true;
+                  break;
+                }
+              }
+              if (!maybePrime) return false;
+            }
+            return true;
+          }
+
+          const nBigInt = BigInt(cleanNum);
+          const isPrime = millerRabinFallback(nBigInt, k);
+          const duration = Math.round(performance.now() - startTime);
+          
+          loading.style.display = 'none';
+          showResult(isPrime, cleanNum, k, duration);
+        }
+      } catch (err) {
+        loading.style.display = 'none';
+        showError(`Ошибка при проверке: ${err.message || err}`);
+      }
+    });
+
+    // === Индикатор загрузки анимация ===
+    let progressInterval;
+    document.getElementById('checkButton').addEventListener('click', () => {
+      let progress = 30;
+      clearInterval(progressInterval);
+      progressInterval = setInterval(() => {
+        if (progress < 95) {
+          progress += Math.random() * 5 + 1;
+          updateProgress(progress, 100, 'Анализ хешей и возведение в степень...');
+        }
+      }, 200);
+    });
+  </script>
+</body>
+</html>
